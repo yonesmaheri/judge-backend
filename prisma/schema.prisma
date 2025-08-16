@@ -1,0 +1,64 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  username    String       @unique
+  password    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  submissions Submission[]
+}
+
+model Question {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String       @default("no description")
+  difficulty  Difficulty   @default(EASY)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Submission[]
+  testCases   TestCase[]
+}
+
+model Submission {
+  id          Int                 @id @default(autoincrement())
+  code        String?
+  filePath    String
+  status      SubmissionStatus    @default(PENDING)
+  output      String?
+  results     Json?
+  successRate Int?
+  user        User                @relation(fields: [userId], references: [id])
+  userId      Int
+  question    Question            @relation(fields: [questionId], references: [id])
+  questionId  Int
+  createdAt   DateTime            @default(now())
+}
+
+model TestCase {
+  id         Int       @id @default(autoincrement())
+  input      String
+  expected   String
+  question   Question  @relation(fields: [questionId], references: [id])
+  questionId Int
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
