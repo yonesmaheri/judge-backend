@@ -35,10 +35,17 @@ async function getQuestionById(req, res) {
 }
 
 async function createQuestion(req, res) {
-  const { title, description, difficulty } = req.body;
+  const { title, description, difficulty, testCases } = req.body;
   try {
     const question = await prisma.question.create({
-      data: { title, description, difficulty },
+      data: {
+        title,
+        description,
+        difficulty,
+        testCases: {
+          create: testCases,
+        },
+      },
     });
     res.status(201).json(question);
   } catch (err) {
@@ -64,46 +71,6 @@ function executePythonFile(filePath, input) {
     process.stdin.end();
   });
 }
-
-// نسخه داخلی run که بدون درخواست جداگانه اجرا میشه
-// async function runSubmissionInternal(submission) {
-//   const submissionWithTests = await prisma.submission.findUnique({
-//     where: { id: submission.id },
-//     include: { question: { include: { testCases: true } } },
-//   });
-
-//   const results = [];
-//   let passCount = 0;
-
-//   for (const testCase of submissionWithTests.question.testCases) {
-//     const execResult = await executePythonFile(
-//       submissionWithTests.filePath,
-//       testCase.input
-//     );
-//     const passed = execResult.trim() === testCase.expected.trim();
-//     if (passed) passCount++;
-//     results.push({
-//       input: testCase.input,
-//       expected: testCase.expected,
-//       output: execResult,
-//       passed,
-//     });
-//   }
-
-//   const successRate = Math.round(
-//     (passCount / submissionWithTests.question.testCases.length) * 100
-//   );
-
-//   return prisma.submission.update({
-//     where: { id: submission.id },
-//     data: {
-//       results,
-//       successRate,
-//       status: successRate === 100 ? "SUCCESS" : "FAILED",
-//     },
-//   });
-// }
-
 async function submission(req, res) {
   try {
     const { id } = req.params;
@@ -121,6 +88,7 @@ async function submission(req, res) {
         userId: req.user.id,
         questionId: questionIdNum,
         filePath: file.path,
+        fileName: file.originalname,
         status: "PENDING",
       },
     });
@@ -139,7 +107,10 @@ async function submission(req, res) {
         let passCount = 0;
 
         for (const testCase of subWithTests.question.testCases) {
-          const execResult = await executePythonFile(subWithTests.filePath, testCase.input);
+          const execResult = await executePythonFile(
+            subWithTests.filePath,
+            testCase.input
+          );
           const passed = execResult.trim() === testCase.expected.trim();
           if (passed) passCount++;
           results.push({
@@ -166,15 +137,11 @@ async function submission(req, res) {
         console.error("Error running submission:", err);
       }
     })();
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "خطای سرور" });
   }
 }
-
-
-
 
 async function getSubmissions(req, res) {
   try {
