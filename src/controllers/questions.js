@@ -76,18 +76,20 @@ async function submission(req, res) {
     const { id } = req.params;
     const file = req.file;
     if (!file) return res.status(400).json({ message: "فایل دریافت نشد" });
+
     const questionIdNum = Number(id);
-
-    if (isNaN(questionIdNum)) {
+    if (isNaN(questionIdNum))
       return res.status(400).json({ message: "questionId معتبر نیست" });
-    }
 
-    // 1. ایجاد سابمیشن با وضعیت PENDING
+    // مسیر مطلق درست فایل داخل کانتینر
+    const filePath = path.join("/app/uploads", path.basename(file.path));
+
+    // ایجاد سابمیشن با وضعیت PENDING
     const submission = await prisma.submission.create({
       data: {
         userId: req.user.id,
         questionId: questionIdNum,
-        filePath: file.path,
+        filePath, // مسیر مطلق
         fileName: file.originalname,
         status: "PENDING",
       },
@@ -95,7 +97,7 @@ async function submission(req, res) {
 
     res.status(201).json({ submission });
 
-    // 2. بعد از ارسال پاسخ به کاربر، شروع خودکار تست‌ها
+    // شروع خودکار تست‌ها بعد از پاسخ به کاربر
     (async () => {
       try {
         const subWithTests = await prisma.submission.findUnique({
@@ -108,7 +110,7 @@ async function submission(req, res) {
 
         for (const testCase of subWithTests.question.testCases) {
           const execResult = await executePythonFile(
-            subWithTests.filePath,
+            subWithTests.filePath, // مسیر مطلق
             testCase.input
           );
           const passed = execResult.trim() === testCase.expected.trim();
