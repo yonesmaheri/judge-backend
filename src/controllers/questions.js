@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const path = require("path");
+const fs = require("fs");
 const { execFile } = require("child_process");
+const prisma = new PrismaClient();
 
 async function getQuestions(req, res) {
   try {
@@ -81,23 +82,31 @@ async function submission(req, res) {
     if (isNaN(questionIdNum))
       return res.status(400).json({ message: "questionId معتبر نیست" });
 
-    // مسیر مطلق درست فایل داخل کانتینر
     const filePath = path.join("/app/uploads", path.basename(file.path));
 
-    // ایجاد سابمیشن با وضعیت PENDING
-    const submission = await prisma.submission.create({
-      data: {
-        userId: req.user.id,
-        questionId: questionIdNum,
-        filePath, // مسیر مطلق
-        fileName: file.originalname,
-        status: "PENDING",
-      },
-    });
+    if (!fs.existsSync(filePath)) {
+      console.error("File not found at path:", filePath);
+      return res.status(500).json({ message: "فایل آپلود نشد یا پیدا نشد" });
+    }
+
+    let submission;
+    try {
+      submission = await prisma.submission.create({
+        data: {
+          userId: req.user.id,
+          questionId: questionIdNum,
+          filePath,
+          fileName: file.originalname,
+          status: "PENDING",
+        },
+      });
+    } catch (err) {
+      console.error("Prisma create error:", err);
+      return res.status(500).json({ message: "خطای دیتابیس" });
+    }
 
     res.status(201).json({ submission });
 
-    // شروع خودکار تست‌ها بعد از پاسخ به کاربر
     (async () => {
       try {
         const subWithTests = await prisma.submission.findUnique({
@@ -105,14 +114,13 @@ async function submission(req, res) {
           include: { question: { include: { testCases: true } } },
         });
 
+        if (!subWithTests?.question?.testCases?.length) return;
+
         const results = [];
         let passCount = 0;
 
         for (const testCase of subWithTests.question.testCases) {
-          const execResult = await executePythonFile(
-            subWithTests.filePath, // مسیر مطلق
-            testCase.input
-          );
+          const execResult = await executePythonFile(filePath, testCase.input);
           const passed = execResult.trim() === testCase.expected.trim();
           if (passed) passCount++;
           results.push({
@@ -129,21 +137,18 @@ async function submission(req, res) {
 
         await prisma.submission.update({
           where: { id: submission.id },
-          data: {
-            results,
-            successRate,
-            status: successRate === 100 ? "SUCCESS" : "FAILED",
-          },
+          data: { results, successRate, status: successRate === 100 ? "SUCCESS" : "FAILED" },
         });
       } catch (err) {
         console.error("Error running submission:", err);
       }
     })();
   } catch (err) {
-    console.error(err);
+    console.error("Submission handler error:", err);
     res.status(500).json({ message: "خطای سرور" });
   }
 }
+
 
 async function getSubmissions(req, res) {
   try {

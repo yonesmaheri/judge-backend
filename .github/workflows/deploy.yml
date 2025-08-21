@@ -23,6 +23,5 @@ jobs:
           script: |
             cd ~/judge/judge-backend
             git pull origin main
-            docker-compose stop backend         
-            docker-compose rm -f backend    
-            docker-compose up -d --build backend 
+            docker-compose down       
+            docker-compose up -d --build  
