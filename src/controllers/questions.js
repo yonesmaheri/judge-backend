@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function getQuestions(req, res) {
