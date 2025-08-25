@@ -9,9 +9,16 @@ const route = require('./routes')
 const app = express();
 
 app.use(helmet());
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://yonesma.ir",
+  "https://www.yonesma.ir"
+];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
