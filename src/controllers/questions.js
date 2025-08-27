@@ -55,6 +55,51 @@ async function createQuestion(req, res) {
   }
 }
 
+async function deleteQuestion(req, res) {
+  try {
+    const { id } = req.params;
+
+    await prisma.question.delete({
+      where: { id: Number(id) },
+    });
+
+    res.json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Failed to delete question" });
+  }
+}
+
+async function updateQuestion(req, res) {
+  try {
+    const { id } = req.params;
+    const { title, description, input, output } = req.body;
+
+    const updatedQuestion = await prisma.question.update({
+      where: { id: Number(id) },
+      data: {
+        title,
+        description,
+        input,
+        output,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Question updated successfully",
+      data: updatedQuestion,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Failed to update question" });
+  }
+}
+
+
 function executePythonFile(filePath, input) {
   return new Promise((resolve, reject) => {
     const process = execFile(
@@ -73,6 +118,7 @@ function executePythonFile(filePath, input) {
     process.stdin.end();
   });
 }
+
 async function submission(req, res) {
   try {
     const { id } = req.params;
@@ -181,4 +227,6 @@ module.exports = {
   createQuestion,
   submission,
   getSubmissions,
+  updateQuestion,
+  deleteQuestion
 };
