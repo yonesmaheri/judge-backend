@@ -2,7 +2,9 @@ const jwt = require('jsonwebtoken');
 
 module.exports = function requireAdmin(req, res, next) {
   try {
-    const token = req.cookies?.[process.env.COOKIE_NAME];
+    
+    const token = req.cookies?.admin_token;
+    
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
