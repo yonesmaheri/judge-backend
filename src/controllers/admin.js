@@ -30,7 +30,7 @@ async function login(req, res) {
 
     const token = signJwt(user);
 
-    res.cookie("admin_token", token, {
+    res.cookie("token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

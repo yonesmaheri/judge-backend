@@ -26,6 +26,7 @@ async function register(req, res) {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   res.status(201).json({
@@ -36,7 +37,6 @@ async function register(req, res) {
 }
 
 async function login(req, res) {
-  
   const { username, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { username } });

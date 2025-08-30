@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 function requireAdmin(req, res, next) {
   try {
-    const token = req.cookies?.admin_token;
+    const token = req.cookies?.token;
 
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
