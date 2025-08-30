@@ -30,13 +30,13 @@ async function login(req, res) {
 
     const token = signJwt(user);
 
-    res.cookie(process.env.COOKIE_NAME, token, {
+    res.cookie("admin_token", token, {
       httpOnly: true,
-      secure: true,         
-      sameSite: 'lax',       
+      secure: true,
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      domain: '.yonesma.ir',  
-      path: '/', 
+      domain: ".yonesma.ir",
+      path: "/",
     });
 
     return res.json({ message: "Logged in successfuly" });
