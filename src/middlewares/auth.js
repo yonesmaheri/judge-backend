@@ -3,7 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function authMiddleware(req, res, next) {
-  const token = req.cookies.user_token;
+  const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Not authenticated" });
 
   try {

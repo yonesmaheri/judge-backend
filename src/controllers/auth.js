@@ -17,22 +17,27 @@ async function register(req, res) {
   });
 
   const token = jwt.sign(
-    { id: user.id, username: user.username },
+    { id: user.id, username: user.username, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES || "7d" }
   );
 
-  res.cookie("user_token", token, {
+  res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   res.status(201).json({
     message: "User registered",
     token,
-    user: { id: user.id, username: user.username, name: user.name },
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+    },
   });
 }
 
@@ -46,19 +51,19 @@ async function login(req, res) {
   if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
   const token = jwt.sign(
-    { id: user.id, username: user.username },
+    { id: user.id, username: user.username, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES }
   );
 
-  res.cookie("user_token", token, {
+  res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // فقط روی https
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // یک هفته
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.json({ token });
+  res.json({ token, role: user.role });
 }
 
 module.exports = { register, login };
