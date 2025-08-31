@@ -10,12 +10,12 @@ const {
   deleteQuestion,
 } = require("../controllers/questions");
 const { upload } = require("../middlewares/upload");
+const requireAdmin = require("../middlewares/requireAdmin");
 
 const router = express.Router();
 
 router.get("/", getQuestions);
 router.get("/:id", getQuestionById);
-router.post("/", authMiddleware, createQuestion);
 router.get("/:id/submissions", authMiddleware, getSubmissions);
 router.post(
   "/:id/submissions",
@@ -23,7 +23,8 @@ router.post(
   upload.single("file"),
   submission
 );
-router.put("/:id", authMiddleware, updateQuestion);
-router.delete("/:id", authMiddleware, deleteQuestion);
+router.post("/", requireAdmin, createQuestion);
+router.put("/:id", requireAdmin, updateQuestion);
+router.delete("/:id", requireAdmin, deleteQuestion);
 
 module.exports = router;
