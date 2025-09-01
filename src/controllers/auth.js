@@ -22,12 +22,6 @@ async function register(req, res) {
     { expiresIn: process.env.JWT_EXPIRES || "7d" }
   );
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
   res.status(201).json({
     message: "User registered",
     token,
@@ -54,12 +48,6 @@ async function login(req, res) {
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES }
   );
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
 
   res.json({ token, role: user.role });
 }
