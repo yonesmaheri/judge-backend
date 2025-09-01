@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function getQuestions(req, res) {
@@ -58,6 +58,7 @@ async function createQuestion(req, res) {
 async function deleteQuestion(req, res) {
   try {
     const { id } = req.params;
+    console.log(id);
 
     await prisma.question.delete({
       where: { id: Number(id) },
@@ -69,7 +70,9 @@ async function deleteQuestion(req, res) {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Failed to delete question" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete question" });
   }
 }
 
@@ -95,10 +98,11 @@ async function updateQuestion(req, res) {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Failed to update question" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update question" });
   }
 }
-
 
 function executePythonFile(filePath, input) {
   return new Promise((resolve, reject) => {
@@ -184,7 +188,11 @@ async function submission(req, res) {
 
         await prisma.submission.update({
           where: { id: submission.id },
-          data: { results, successRate, status: successRate === 100 ? "SUCCESS" : "FAILED" },
+          data: {
+            results,
+            successRate,
+            status: successRate === 100 ? "SUCCESS" : "FAILED",
+          },
         });
       } catch (err) {
         console.error("Error running submission:", err);
@@ -195,7 +203,6 @@ async function submission(req, res) {
     res.status(500).json({ message: "خطای سرور" });
   }
 }
-
 
 async function getSubmissions(req, res) {
   try {
@@ -228,5 +235,5 @@ module.exports = {
   submission,
   getSubmissions,
   updateQuestion,
-  deleteQuestion
+  deleteQuestion,
 };
